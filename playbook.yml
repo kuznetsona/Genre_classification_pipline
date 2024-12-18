@@ -1,0 +1,41 @@
+---
+- name: Deployment of Genre Classification application
+  hosts: all
+  become: yes
+  vars:
+    remote_dir: "/home/ubuntu/genre_clf"
+    local_files:
+      - server/*.txt
+      - server/*.py
+      - server/model/*.pkl
+      - server/templates/*.html
+      - server/utils/*.py
+  tasks:
+
+    - name: Ensure the target directory exists
+      ansible.builtin.file:
+        path: "{{ remote_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Copy files to remote server
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ remote_dir }}/"
+      loop: "{{ local_files }}"
+    
+    - name: Go to the directory genre_clf/server
+      ansible.builtin.shell: 
+        cmd: cd {{ remote_dir}}/server
+  
+    - name: Install all requirement
+      ansible.builtin.shell:
+      	cmd: pip install -r requirements.txt
+
+    - name: Start python file
+      ansible.builtin.shell:
+        cmd: python3 app.py
+        
+        
