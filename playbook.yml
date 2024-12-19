@@ -5,11 +5,13 @@
   vars:
     remote_dir: "/home/ubuntu/genre_clf"
     local_files:
-      - server/*.txt
-      - server/*.py
-      - server/model/*.pkl
-      - server/templates/*.html
-      - server/utils/*.py
+      - "server/requirements.txt"
+      - "server/app.py"
+      - "server/utils/feature_extraction.py"
+      - "server/model/min_max_scaler.pkl"
+      - "server/model/xgb_mgen.pkl"
+      - "server/templates/index.html"
+      - "server/templates/result.html"
   tasks:
 
     - name: Ensure the target directory exists
@@ -25,17 +27,34 @@
         src: "{{ item }}"
         dest: "{{ remote_dir }}/"
       loop: "{{ local_files }}"
-    
-    - name: Go to the directory genre_clf/server
-      ansible.builtin.shell: 
-        cmd: cd {{ remote_dir}}/server
-  
-    - name: Install all requirement
-      ansible.builtin.shell:
-      	cmd: pip install -r requirements.txt
 
-    - name: Start python file
+    - name: Print the website link
+      ansible.builtin.debug:
+        msg: "You can access the application at: http://{{ ansible_host }}:5000/"
+
+    - name: Update
+      ansible.builtin.shell: 
+        cmd: sudo apt update
+        
+    - name: Install python
+      ansible.builtin.shell: 
+        cmd: sudo apt install --yes --force-yes python3-pip
+
+    - name: Install all requirement
+      ansible.builtin.shell: 
+        cmd: pip install --upgrade -r genre_clf/requirements.txt
+
+    - name: Make templates
+      ansible.builtin.shell: 
+        cmd: mkdir genre_clf/templates
+
+    - name: Transfer all html files to templates dir
+      ansible.builtin.shell: 
+        cmd: mv genre_clf/index.html genre_clf/result.html genre_clf/templates/
+
+    - name: Start python server 
       ansible.builtin.shell:
-        cmd: python3 app.py
-        
-        
+        cmd: python3 genre_clf/app.py
+ 
+
+    
